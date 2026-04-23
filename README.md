@@ -1,176 +1,279 @@
-# AI 面试陪练官 - 项目骨架
+# InterviewFlow AI
 
-这是一个面向求职训练场景的实时语音多模态 AI 面试陪练平台骨架，基于阿里千问 / DashScope 能力设计，目标是先把项目讲清楚、分层清楚、接口清楚，后续再逐步补全真实业务实现。
+InterviewFlow AI 是一个面向求职训练场景的 AI 实时语音面试平台。项目围绕“实时语音交互、可打断语音 Agent、动态追问、多维度回答评估、训练闭环”展开，打通了简历解析、JD 分析、实时面试、逐轮反馈和会后复盘这条完整链路。
 
-## 1. 推荐技术栈
+当前仓库是一个可运行的 MVP：后端使用 FastAPI + WebSocket，前端使用静态 HTML/CSS/JavaScript 页面；实时语音链路由 DashScope Realtime 承担，结构化分析、评分和报告生成由 DashScope 文本模型完成。
 
-### 前端
+## 项目亮点
 
-- Next.js + React
-- Web Audio API / MediaRecorder 采集麦克风
-- WebSocket 负责浏览器与后端的实时事件同步
-- Tailwind CSS 或 CSS Modules 构建面板式训练界面
+- 实时语音面试：浏览器采集麦克风音频并流式上传，服务端桥接 DashScope Realtime，返回实时转录与流式语音回复。
+- 可打断语音 Agent：支持用户插话，结合前端本地检测与服务端 `semantic_vad` 确认实现更自然的打断体验。
+- 动态追问机制：先分析回答质量，再根据 STAR 缺失项、关键词覆盖度、量化缺失、个人贡献不足等问题生成下一轮追问。
+- 多维度回答评估：从完整度、STAR、岗位匹配度、表达清晰度、语音表现等多个维度给出评分与建议。
+- 训练闭环：每轮回答后生成即时反馈，整场结束后生成完整复盘报告。
+- 多模态扩展：支持在面试过程中追加图片上下文，增强问题理解和问答场景表达。
+
+## 项目流程
+
+1. 上传简历并抽取结构化候选人画像。
+2. 输入目标岗位 JD 并提取岗位关键词与考察重点。
+3. 创建面试 Session，将简历画像与岗位画像作为上下文注入。
+4. 进入 WebSocket 面试房间，开始实时语音问答。
+5. AI 面试官基于当前轮次回答进行动态追问。
+6. 系统逐轮输出评分卡、薄弱点和训练建议。
+7. 面试结束后生成复盘报告，形成训练闭环。
+
+## 当前实现范围
+
+当前仓库已经包含：
+
+- 简历解析接口
+- JD 分析接口
+- Session 创建与查询接口
+- 实时语音面试 WebSocket 房间
+- DashScope Realtime 适配层
+- 动态追问编排器
+- 逐轮反馈与最终报告生成
+- 首页与 Interview 房间 UI
+
+当前仍属于 MVP，暂未完整落地：
+
+- PostgreSQL 持久化
+- Redis Session 管理
+- 完整 React / Next.js 前端
+- 自动化测试与 CI
+
+因此，这个仓库更适合作为“可演示、可扩展的 AI 面试训练原型系统”来看待。
+
+## 核心架构
+
+实时交互链路：
+
+```text
+Browser
+  -> FastAPI WebSocket
+  -> DashScope Realtime
+  -> 服务端事件映射
+  -> Browser UI
+```
+
+训练分析链路：
+
+```text
+Resume / JD 输入
+  -> ProfileAnalysisService
+  -> Structured Profiles
+  -> InterviewOrchestrator
+  -> ReportGenerator
+  -> Turn Feedback / Final Report
+```
+
+### 核心模块
+
+- `apps/server/app/main.py`
+  FastAPI 入口，负责 REST API、WebSocket 房间、Session 生命周期管理。
+- `apps/server/app/services/intake/document_text_extractor.py`
+  提取 `txt`、`md`、`json`、`pdf`、`docx` 等格式文本。
+- `apps/server/app/services/intake/profile_analysis_service.py`
+  将简历与 JD 转换为结构化画像。
+- `apps/server/app/services/interview/dashscope_realtime_adapter.py`
+  负责前端事件与 DashScope Realtime 事件之间的双向映射。
+- `apps/server/app/services/interview/realtime_session_service.py`
+  负责实时会话启动、转发、关闭与房间内事件协调。
+- `apps/server/app/services/interview/interview_orchestrator.py`
+  负责回答分析、追问策略选择和下一轮问题生成。
+- `apps/server/app/services/report/report_generator.py`
+  负责逐轮反馈与最终报告生成。
+- `apps/server/app/services/qwen/dashscope_client.py`
+  DashScope 文本能力统一封装。
+
+### 前端页面
+
+- `apps/web/index.html`
+  首页，负责简历上传、JD 输入和 Session 创建。
+- `apps/web/interview.html`
+  面试房间，负责音频采集、状态展示、实时转录、评分与反馈展示。
+- `apps/web/demo-client.html`
+  调试页面，用于快速验证 WebSocket 和实时语音链路。
+
+## 技术栈
 
 ### 后端
 
-- FastAPI 作为主服务框架
-- Python `dashscope` SDK 管理千问 Realtime 会话
-- REST API 管理简历、JD、会话、报告
-- SQLAlchemy + Alembic 管理 PostgreSQL
-- Redis 管理实时 session 状态和短期缓存
-- MinIO / OSS 存储录音、截图、报告附件
+- Python
+- FastAPI
+- WebSocket / asyncio
+- Pydantic / pydantic-settings
+- DashScope SDK
 
-### AI 能力层
+### 前端
 
-- DashScope Compatible Chat Completions
-- DashScope Realtime WebSocket `wss://dashscope.aliyuncs.com/api-ws/v1/realtime`
+- HTML
+- CSS
+- JavaScript
+- Web Audio API
 
-## 2. 当前的实时语音方案
+### AI 能力
 
-现在项目统一使用阿里千问 / DashScope：
+- DashScope Realtime
+- DashScope Chat Models
 
-- `DashScope Realtime`：负责实时语音通话、实时转录、助手音频流式返回
-- `DashScope Chat`：负责会后评分、结构化总结、报告生成、非实时补充分析
-
-也就是说，面试房间实时体验由 Realtime 模型承接，而“训练闭环”和“结构化评分”仍然放在现有编排层里。
-
-主链路变成：
-
-`Browser -> WebSocket -> Interview Server -> DashScope Realtime`
-
-同时服务端还能并行触发：
-
-`Interview Server -> DashScope scoring/report pipeline`
-
-这样做的好处是：
-
-- 实时对话延迟更低
-- 不破坏你现有的评分/报告架构
-- 更适合面试项目里讲“多模型协作”和“多角色编排”
-- 以后要替换成别的 Realtime Provider，只需要换 adapter
-
-## 3. 目标模块
-
-### 业务模块
-
-- 主面试官 Agent
-- 评分与复盘 Agent
-- 简历解析模块
-- 岗位 JD 分析模块
-- STAR 结构检测模块
-- 追问策略模块
-- 训练报告生成模块
-
-### 核心页面
-
-- 练习首页
-- 面试房间页
-- 历史记录页
-- 单次报告详情页
-
-## 4. 建议目录
+## 目录结构
 
 ```text
 apps/
-  web/
-    src/
-      features/interview/
   server/
     app/
-      services/
-        interview/
-        report/
-        qwen/
-      schemas/
       core/
+      schemas/
+      services/
+        intake/
+        interview/
+        qwen/
+        report/
     requirements.txt
-packages/
-  shared/
+  web/
+    assets/
     src/
+    index.html
+    interview.html
+    demo-client.html
 docs/
   architecture.md
   api-contract.md
   roadmap.md
+  interview-platform-qa.md
+packages/
+  shared/
+    src/
 .env.example
-.gitignore
 README.md
 ```
 
-## 5. 系统主链路
+## 快速开始
 
-1. 用户上传简历、填写目标岗位 JD。
-2. 后端先做简历摘要和 JD 要点抽取。
-3. 用户进入面试房间，浏览器采集麦克风音频。
-4. 前端通过 WebSocket 推送音频块或结束标记给后端。
-5. 后端桥接到 DashScope Realtime 会话，拿到实时转录与流式语音回复。
-6. 主面试官通过 Realtime instructions 维持自然面试节奏。
-7. 用户回答完成后，评分 Agent 并行产出结构化评分、STAR 检测、关键词覆盖分析。
-8. 会后或关键轮次可继续调用 DashScope Chat 生成深度反馈与复盘。
-9. 会话结束后生成复盘报告并落库。
+### 1. 克隆仓库
 
-## 6. DashScope 接口映射
+```bash
+git clone https://github.com/sea6A/InterviewFlow-AI-.git
+cd InterviewFlow-AI-
+```
 
-### 对话模型
+### 2. 配置环境变量
 
-- 用途：主面试官提问、动态追问、评分反馈、报告总结
-- 接口：`POST /compatible-mode/v1/chat/completions`
-- 推荐模型：`qwen-plus` 或你实际使用的千问文本模型
+将 `.env.example` 复制为 `.env`，并填写你的 DashScope API Key。
 
-## 7. DashScope Realtime 接入
+Linux / macOS:
 
-你提供的示例代码已经被映射成项目里的 Realtime 适配层，关键位置如下：
+```bash
+cp .env.example .env
+```
 
-- `packages/shared/src/interview.ts`
-  - 增加了 Realtime 会话配置、音频增量、最终转录、连接状态事件
-- `apps/server/app/services/interview/dashscope_realtime_adapter.py`
-  - 负责把 DashScope 原始事件映射成项目统一事件
-- `apps/server/app/services/interview/realtime_session_service.py`
-  - 负责启动、转发、关闭一次实时面试会话
-- `apps/server/app/services/interview/interview_orchestrator.py`
-  - 负责生成面试场景下的 Realtime session instructions
+Windows PowerShell:
 
-你给的 Python 示例里最核心的三件事，在项目里分别对应：
+```powershell
+Copy-Item .env.example .env
+```
 
-- `conv.update_session(...)`
-  - 对应 `buildRealtimeBootstrap()` 和 `createSessionInitMessage()`
-- `conv.append_audio(...)`
-  - 对应客户端 `audio.chunk` 事件和 adapter 的 `forwardAudioChunk()`
-- `on_event(response)`
-  - 对应 adapter 的 `mapProviderEvent()`
+至少需要配置：
 
-## 8. MVP 优先级
+- `DASHSCOPE_API_KEY`
 
-### 第一阶段
+常用本地默认值：
 
-- 简历上传
-- JD 输入
-- 单轮音频转文本
-- AI 面试官提问
-- 追问生成
-- 基础评分面板
-- 会后报告
-- 最小调试页 `apps/web/demo-client.html`
+- `APP_HOST=0.0.0.0`
+- `APP_PORT=3001`
+- `APP_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,null`
 
-### 第二阶段
+### 3. 安装后端依赖
 
-- 中途打断
-- 实时分段字幕
-- 历史记录回放
-- 针对薄弱项生成专项训练
+```bash
+cd apps/server
+pip install -r requirements.txt
+```
 
-### 第三阶段
+### 4. 启动后端服务
 
-- 多岗位模板
-- 英语面试模式
-- 可视化数据看板
-- 外部 MCP 连接器
+```bash
+uvicorn app.main:app --reload --host 0.0.0.0 --port 3001
+```
 
-## 9. 下一步怎么继续
+### 5. 打开前端页面
 
-如果你要继续往下做，我建议下一步直接补三件事：
+当前前端是静态页面，可以直接打开或用任意静态服务器启动：
 
-1. 把浏览器录音改成 16k PCM chunk 推流，而不是一次性上传整段。
-2. 给 FastAPI WebSocket 加 session 鉴权、断线重连和 Redis 状态同步。
-3. 把评分链路放到回答完成后异步执行，再补 PostgreSQL 持久化。
+- `apps/web/index.html`
+- `apps/web/interview.html`
+- `apps/web/demo-client.html`
 
-这样最容易快速做出一个能演示的 Demo。
+如果前端运行在其他端口，请确保它已经被加入 `APP_ALLOWED_ORIGINS`。
+
+## 主要接口
+
+### REST API
+
+- `POST /api/v1/resumes/analyze`
+- `POST /api/v1/jobs/analyze`
+- `POST /api/v1/sessions`
+- `GET /api/v1/sessions`
+- `GET /api/v1/sessions/{session_id}`
+- `GET /api/v1/sessions/{session_id}/report`
+
+### WebSocket
+
+- `GET /ws/interview/{session_id}`
+
+更完整的请求和事件契约见 [docs/api-contract.md](docs/api-contract.md)。
+
+## 这个项目的价值
+
+这个项目并不是“给聊天机器人接一个麦克风”这么简单。它真正有意思的地方在于把两条链路拆开了：
+
+- Realtime 链路负责低延迟语音交互
+- Analysis 链路负责结构化分析、评分和训练反馈
+
+这样做的好处是：
+
+- 实时体验和深度分析可以分别优化
+- 追问策略更可控，不只是简单续写
+- 项目具备继续扩展到持久化、报告面板、多模态训练和更多 Provider 的空间
+
+同时，这个系统形成了一个更像真实面试训练的循环：
+
+- 提问
+- 回答
+- 分析回答
+- 发现缺口
+- 生成追问
+- 给出反馈
+- 汇总复盘
+
+## 后续方向
+
+项目后续可以继续扩展：
+
+- Redis + PostgreSQL 持久化
+- 面试历史与报告看板
+- 更强的移动端适配
+- 更完整的多模态上下文输入
+- 更多可替换的实时语音 Provider 适配器
+- 自动化测试与 CI/CD
+
+详细规划见 [docs/roadmap.md](docs/roadmap.md)。
+
+## 文档入口
+
+- [docs/architecture.md](docs/architecture.md)：系统架构与模块拆分
+- [docs/api-contract.md](docs/api-contract.md)：REST 与 WebSocket 协议说明
+- [docs/roadmap.md](docs/roadmap.md)：后续迭代路线
+- [docs/interview-platform-qa.md](docs/interview-platform-qa.md)：项目问答集，适合答辩和面试准备
+
+## 说明
+
+- 当前前端是静态 MVP，不是完整的 React / Next.js 工程。
+- 当前 Session 状态保存在内存中，适合 Demo 和原型验证。
+- 所有密钥请通过 `.env` 注入，不要直接写入源码。
+
+## License
+
+本项目采用 [MIT License](LICENSE)。
