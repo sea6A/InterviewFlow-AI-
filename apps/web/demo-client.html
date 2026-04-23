@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI 面试陪练官 Demo Client</title>
+    <style>
+      :root {
+        --bg: #f6f4ef;
+        --panel: #fffdf8;
+        --line: #ddd4c7;
+        --text: #1d1b19;
+        --muted: #6a635b;
+        --accent: #b24c2f;
+        --accent-soft: #f2d9cf;
+        --ok: #2d7a55;
+        --warn: #7a4b34;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "PingFang SC", sans-serif;
+        background:
+          radial-gradient(circle at top right, #f3e7dc 0, transparent 28%),
+          linear-gradient(180deg, #fbfaf7 0%, var(--bg) 100%);
+        color: var(--text);
+      }
+
+      .page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 32px 20px 48px;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: 32px;
+      }
+
+      .lead {
+        margin: 0 0 24px;
+        color: var(--muted);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        gap: 20px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 20px;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 12px 30px rgba(60, 43, 20, 0.06);
+      }
+
+      .card h2 {
+        margin: 0 0 14px;
+        font-size: 18px;
+      }
+
+      label {
+        display: block;
+        font-size: 14px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+
+      input,
+      textarea,
+      button {
+        font: inherit;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 10px 12px;
+        background: #fff;
+        margin-bottom: 14px;
+      }
+
+      textarea {
+        min-height: 96px;
+        resize: vertical;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 10px 16px;
+        background: var(--accent);
+        color: #fff;
+        cursor: pointer;
+      }
+
+      button.secondary {
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+
+      button.ghost {
+        background: #eee5d8;
+        color: #5b3e2d;
+      }
+
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
+      .status {
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: #fff7ef;
+        border: 1px solid #efd7c6;
+        margin-bottom: 14px;
+        color: var(--warn);
+      }
+
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .pill {
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: #f2ece2;
+        border: 1px solid var(--line);
+        font-size: 13px;
+      }
+
+      .pill.ok {
+        color: var(--ok);
+        background: #edf8f1;
+        border-color: #bfe1cb;
+      }
+
+      .pill.warn {
+        color: var(--warn);
+        background: #fff4ea;
+        border-color: #efcfb5;
+      }
+
+      .transcript-box {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #fff;
+        padding: 14px;
+        min-height: 110px;
+        margin-bottom: 12px;
+      }
+
+      .transcript-box strong {
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .log {
+        min-height: 420px;
+        max-height: 640px;
+        overflow: auto;
+        background: #1c1815;
+        color: #efe7da;
+        border-radius: 14px;
+        padding: 14px;
+        font-family: Consolas, monospace;
+        font-size: 13px;
+        white-space: pre-wrap;
+      }
+
+      .hint {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 10px;
+      }
+
+      @media (max-width: 900px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <h1>AI 面试陪练官 Demo Client</h1>
+      <p class="lead">
+        这个页面现在不仅能测 REST 和 WebSocket，还能直接采集麦克风，把 16k PCM
+        音频推给 FastAPI，再播放 DashScope 返回的语音分片。
+      </p>
+
+      <div class="grid">
+        <div class="stack">
+          <section class="card">
+            <h2>连接配置</h2>
+            <label for="apiBase">后端地址</label>
+            <input id="apiBase" value="http://127.0.0.1:3001" />
+
+            <label for="sessionId">会话 ID</label>
+            <input id="sessionId" value="" />
+
+            <label for="jobTitle">岗位标题</label>
+            <input id="jobTitle" value="后端开发工程师" />
+
+            <label for="resumeSummary">简历摘要</label>
+            <textarea id="resumeSummary">1 年 Python 后端经验，熟悉 FastAPI、Redis、MySQL。</textarea>
+
+            <label for="keywords">岗位关键词</label>
+            <input id="keywords" value="FastAPI, Redis, MySQL, 微服务" />
+
+            <div class="actions">
+              <button id="createSessionBtn">创建会话</button>
+              <button id="connectWsBtn">连接 WebSocket</button>
+              <button id="sendThinkingBtn" class="secondary">发送测试事件</button>
+            </div>
+
+            <p class="hint">
+              如果浏览器里麦克风权限不可用，建议不要直接双击 html，
+              而是用 VS Code Live Server 或 `python -m http.server` 起一个本地静态服务。
+            </p>
+          </section>
+
+          <section class="card">
+            <h2>实时语音控制</h2>
+
+            <div class="status" id="status">尚未连接</div>
+
+            <div class="pill-row">
+              <div class="pill" id="wsStatePill">WS: 未连接</div>
+              <div class="pill" id="roomPhasePill">房间状态: idle</div>
+              <div class="pill" id="micStatePill">麦克风: 未启动</div>
+              <div class="pill" id="audioStatePill">播放: 空闲</div>
+            </div>
+
+            <div class="actions">
+              <button id="startMicBtn" class="ghost">开始录音</button>
+              <button id="stopMicBtn" class="secondary" disabled>结束回答</button>
+              <button id="interruptBtn" class="secondary" disabled>打断 AI</button>
+            </div>
+
+            <p class="hint">
+              “开始录音”后会持续采集麦克风；“结束回答”会向后端发送 `answer.commit`；
+              如果当前模型正在说话，“打断 AI”会发送 `assistant.interrupt`。
+            </p>
+          </section>
+
+          <section class="card">
+            <h2>实时内容</h2>
+            <div class="transcript-box">
+              <strong>当前问题</strong>
+              <div id="questionText">还没有收到面试官提问。</div>
+            </div>
+            <div class="transcript-box">
+              <strong>用户转写</strong>
+              <div id="candidateTranscript">等待麦克风输入。</div>
+            </div>
+            <div class="transcript-box">
+              <strong>助手文本</strong>
+              <div id="assistantTranscript">等待 AI 返回内容。</div>
+            </div>
+          </section>
+        </div>
+
+        <section class="card">
+          <h2>事件面板</h2>
+          <div id="log" class="log"></div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      const apiBaseInput = document.getElementById("apiBase");
+      const sessionIdInput = document.getElementById("sessionId");
+      const jobTitleInput = document.getElementById("jobTitle");
+      const resumeSummaryInput = document.getElementById("resumeSummary");
+      const keywordsInput = document.getElementById("keywords");
+
+      const statusEl = document.getElementById("status");
+      const logEl = document.getElementById("log");
+      const wsStatePill = document.getElementById("wsStatePill");
+      const roomPhasePill = document.getElementById("roomPhasePill");
+      const micStatePill = document.getElementById("micStatePill");
+      const audioStatePill = document.getElementById("audioStatePill");
+      const questionTextEl = document.getElementById("questionText");
+      const candidateTranscriptEl = document.getElementById("candidateTranscript");
+      const assistantTranscriptEl = document.getElementById("assistantTranscript");
+
+      const startMicBtn = document.getElementById("startMicBtn");
+      const stopMicBtn = document.getElementById("stopMicBtn");
+      const interruptBtn = document.getElementById("interruptBtn");
+
+      let ws = null;
+      let audioContext = null;
+      let mediaStream = null;
+      let mediaSource = null;
+      let processorNode = null;
+      let isCapturing = false;
+      let chunkIndex = 0;
+
+      // 这两个变量用来做“流式播放排队”。
+      // DashScope 返回的是一小段一小段的 PCM 音频，我们需要顺序播放，避免重叠。
+      let playbackCursorTime = 0;
+      let pendingAssistantTranscript = "";
+
+      function createSessionId() {
+        return `demo_${Date.now()}`;
+      }
+
+      function ensureSessionId() {
+        if (!sessionIdInput.value.trim()) {
+          sessionIdInput.value = createSessionId();
+        }
+        return sessionIdInput.value.trim();
+      }
+
+      function appendLog(label, payload) {
+        const text = `[${new Date().toLocaleTimeString()}] ${label}\n${typeof payload === "string" ? payload : JSON.stringify(payload, null, 2)}\n\n`;
+        logEl.textContent += text;
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      function setStatus(message) {
+        statusEl.textContent = message;
+      }
+
+      function setWsState(message, kind = "") {
+        wsStatePill.textContent = `WS: ${message}`;
+        wsStatePill.className = `pill ${kind}`.trim();
+      }
+
+      function setRoomPhase(phase) {
+        roomPhasePill.textContent = `房间状态: ${phase}`;
+      }
+
+      function setMicState(message, kind = "") {
+        micStatePill.textContent = `麦克风: ${message}`;
+        micStatePill.className = `pill ${kind}`.trim();
+      }
+
+      function setAudioState(message, kind = "") {
+        audioStatePill.textContent = `播放: ${message}`;
+        audioStatePill.className = `pill ${kind}`.trim();
+      }
+
+      function updateButtons() {
+        const wsReady = ws && ws.readyState === WebSocket.OPEN;
+        startMicBtn.disabled = !wsReady || isCapturing;
+        stopMicBtn.disabled = !wsReady || !isCapturing;
+        interruptBtn.disabled = !wsReady;
+      }
+
+      async function ensureAudioContext() {
+        // AudioContext 既负责麦克风采集，也负责播放 AI 返回的音频。
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        if (audioContext.state === "suspended") {
+          await audioContext.resume();
+        }
+
+        return audioContext;
+      }
+
+      function floatTo16BitPCM(floatArray) {
+        // 浏览器采集出来的是 Float32(-1 到 1)，
+        // 这里把它转换成后端和 DashScope 更容易处理的 Int16 PCM。
+        const output = new Int16Array(floatArray.length);
+        for (let i = 0; i < floatArray.length; i += 1) {
+          const s = Math.max(-1, Math.min(1, floatArray[i]));
+          output[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+        }
+        return output;
+      }
+
+      function downsampleBuffer(buffer, inputSampleRate, outputSampleRate) {
+        // 浏览器麦克风常常是 44100 或 48000 Hz，
+        // 但当前后端按 16000 Hz PCM 推给 DashScope，
+        // 所以这里做一个简单的降采样。
+        if (outputSampleRate >= inputSampleRate) {
+          return buffer;
+        }
+
+        const sampleRateRatio = inputSampleRate / outputSampleRate;
+        const newLength = Math.round(buffer.length / sampleRateRatio);
+        const result = new Float32Array(newLength);
+
+        let offsetResult = 0;
+        let offsetBuffer = 0;
+        while (offsetResult < result.length) {
+          const nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio);
+          let accum = 0;
+          let count = 0;
+
+          for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i += 1) {
+            accum += buffer[i];
+            count += 1;
+          }
+
+          result[offsetResult] = count > 0 ? accum / count : 0;
+          offsetResult += 1;
+          offsetBuffer = nextOffsetBuffer;
+        }
+
+        return result;
+      }
+
+      function pcm16ToBase64(int16Array) {
+        const bytes = new Uint8Array(int16Array.buffer);
+        let binary = "";
+        const chunkSize = 0x8000;
+
+        // 分段拼接，避免一次性展开过大数组导致浏览器报错。
+        for (let i = 0; i < bytes.length; i += chunkSize) {
+          const chunk = bytes.subarray(i, i + chunkSize);
+          binary += String.fromCharCode(...chunk);
+        }
+
+        return btoa(binary);
+      }
+
+      function base64ToInt16Array(base64) {
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i += 1) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        return new Int16Array(bytes.buffer);
+      }
+
+      async function playAudioDelta(deltaBase64) {
+        const context = await ensureAudioContext();
+        const pcm16 = base64ToInt16Array(deltaBase64);
+        const float32 = new Float32Array(pcm16.length);
+
+        for (let i = 0; i < pcm16.length; i += 1) {
+          float32[i] = pcm16[i] / 0x8000;
+        }
+
+        // DashScope 这里返回的是 24k 单声道 PCM。
+        const buffer = context.createBuffer(1, float32.length, 24000);
+        buffer.copyToChannel(float32, 0);
+
+        const source = context.createBufferSource();
+        source.buffer = buffer;
+        source.connect(context.destination);
+
+        const startAt = Math.max(context.currentTime + 0.03, playbackCursorTime);
+        source.start(startAt);
+        playbackCursorTime = startAt + buffer.duration;
+
+        setAudioState("播放中", "ok");
+        source.onended = () => {
+          if (playbackCursorTime <= context.currentTime + 0.08) {
+            setAudioState("空闲", "");
+          }
+        };
+      }
+
+      async function createSession() {
+        try {
+          const apiBase = apiBaseInput.value.trim();
+          const sessionId = ensureSessionId();
+          const keywords = keywordsInput.value
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean);
+
+          const body = {
+            session_id: sessionId,
+            resume_profile: {
+              resume_id: `resume_${sessionId}`,
+              summary: resumeSummaryInput.value.trim(),
+              strengths: ["沟通清晰", "学习能力强"],
+              projects: [
+                {
+                  name: "AI 面试陪练官",
+                  highlights: ["完成 FastAPI 后端骨架", "接入 DashScope Realtime"],
+                },
+              ],
+            },
+            job_profile: {
+              job_id: `job_${sessionId}`,
+              title: jobTitleInput.value.trim(),
+              seniority: "junior",
+              keywords,
+              focus_areas: ["项目经验", "技术取舍"],
+            },
+          };
+
+          appendLog("REST request", body);
+          setStatus("正在创建会话...");
+
+          const response = await fetch(`${apiBase}/api/v1/sessions`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(body),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+          }
+
+          const data = await response.json();
+          appendLog("REST /api/v1/sessions", data);
+          setStatus(`会话已创建：${data.sessionId}`);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          setStatus("创建会话失败");
+          appendLog("REST error", message);
+        }
+      }
+
+      function connectWebSocket() {
+        const apiBase = apiBaseInput.value.trim();
+        const sessionId = ensureSessionId();
+        const wsBase = apiBase.replace("http://", "ws://").replace("https://", "wss://");
+
+        if (ws) {
+          ws.close();
+        }
+
+        ws = new WebSocket(`${wsBase}/ws/interview/${sessionId}`);
+        setWsState("连接中", "warn");
+        updateButtons();
+
+        ws.onopen = () => {
+          setStatus(`WebSocket 已连接：${sessionId}`);
+          setWsState("已连接", "ok");
+          appendLog("WS open", { sessionId });
+          updateButtons();
+        };
+
+        ws.onmessage = async (event) => {
+          try {
+            const payload = JSON.parse(event.data);
+            appendLog("WS event", payload);
+
+            if (payload.type === "room.phase.changed") {
+              setRoomPhase(payload.phase);
+            }
+
+            if (payload.type === "session.connected") {
+              setRoomPhase(payload.phase);
+            }
+
+            if (payload.type === "transcript.final") {
+              candidateTranscriptEl.textContent = payload.text || "没有识别到用户文本。";
+            }
+
+            if (payload.type === "assistant.transcript.done") {
+              pendingAssistantTranscript = payload.text || "";
+              assistantTranscriptEl.textContent = pendingAssistantTranscript || "AI 没有返回文本。";
+            }
+
+            if (payload.type === "interviewer.question") {
+              questionTextEl.textContent = payload.text || "还没有收到面试官提问。";
+            }
+
+            if (payload.type === "assistant.audio.delta" && payload.deltaBase64) {
+              await playAudioDelta(payload.deltaBase64);
+            }
+
+            if (payload.type === "provider.error") {
+              setStatus(`Realtime 错误：${payload.message}`);
+            }
+          } catch (error) {
+            appendLog("WS raw", event.data);
+            if (error instanceof Error) {
+              appendLog("WS parse error", error.message);
+            }
+          }
+        };
+
+        ws.onerror = () => {
+          setStatus("WebSocket 发生错误");
+          setWsState("错误", "warn");
+          updateButtons();
+        };
+
+        ws.onclose = () => {
+          setStatus("WebSocket 已关闭");
+          setWsState("已关闭", "warn");
+          appendLog("WS close", "connection closed");
+          updateButtons();
+        };
+      }
+
+      function sendJson(payload) {
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+          appendLog("WS send", "请先连接 WebSocket");
+          return false;
+        }
+
+        ws.send(JSON.stringify(payload));
+        appendLog("WS send", payload);
+        return true;
+      }
+
+      function sendTestThinkingEvent() {
+        const payload = {
+          type: "realtime.response.create",
+          sessionId: ensureSessionId(),
+          response: {
+            modalities: ["audio", "text"],
+            prompt: "请开始一轮面试自我介绍提问。",
+          },
+        };
+        sendJson(payload);
+      }
+
+      async function startMicrophone() {
+        try {
+          if (!ws || ws.readyState !== WebSocket.OPEN) {
+            appendLog("Mic", "请先连接 WebSocket");
+            return;
+          }
+
+          const context = await ensureAudioContext();
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              channelCount: 1,
+              echoCancellation: true,
+              noiseSuppression: true,
+            },
+          });
+
+          mediaSource = context.createMediaStreamSource(mediaStream);
+
+          // ScriptProcessorNode 已经属于旧接口，但它足够直观，
+          // 很适合当前这个教学型 Demo。后面如果做正式版，可以换 AudioWorklet。
+          processorNode = context.createScriptProcessor(4096, 1, 1);
+          processorNode.onaudioprocess = (event) => {
+            if (!isCapturing || !ws || ws.readyState !== WebSocket.OPEN) {
+              return;
+            }
+
+            const inputData = event.inputBuffer.getChannelData(0);
+            const downsampled = downsampleBuffer(inputData, context.sampleRate, 16000);
+            const pcm16 = floatTo16BitPCM(downsampled);
+            const base64 = pcm16ToBase64(pcm16);
+
+            const payload = {
+              type: "audio.chunk",
+              sessionId: ensureSessionId(),
+              chunkId: `chunk_${chunkIndex += 1}`,
+              mimeType: "audio/pcm",
+              sampleRate: 16000,
+              payloadBase64: base64,
+            };
+
+            ws.send(JSON.stringify(payload));
+          };
+
+          // 有些浏览器如果节点不接到 destination，回调可能不触发。
+          mediaSource.connect(processorNode);
+          processorNode.connect(context.destination);
+
+          isCapturing = true;
+          setMicState("录音中", "ok");
+          setStatus("正在采集麦克风并推流到后端...");
+          updateButtons();
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          setMicState("启动失败", "warn");
+          appendLog("Mic error", message);
+        }
+      }
+
+      function stopMicrophoneResources() {
+        if (processorNode) {
+          processorNode.disconnect();
+          processorNode.onaudioprocess = null;
+          processorNode = null;
+        }
+
+        if (mediaSource) {
+          mediaSource.disconnect();
+          mediaSource = null;
+        }
+
+        if (mediaStream) {
+          mediaStream.getTracks().forEach((track) => track.stop());
+          mediaStream = null;
+        }
+      }
+
+      function stopAnswer() {
+        if (!isCapturing) {
+          return;
+        }
+
+        isCapturing = false;
+        stopMicrophoneResources();
+        setMicState("已停止", "");
+        setStatus("已结束回答，等待 AI 回复...");
+        updateButtons();
+
+        sendJson({
+          type: "answer.commit",
+          sessionId: ensureSessionId(),
+          turnId: `turn_${Date.now()}`,
+        });
+      }
+
+      function interruptAssistant() {
+        sendJson({
+          type: "assistant.interrupt",
+          sessionId: ensureSessionId(),
+          reason: "manual_stop",
+        });
+      }
+
+      document.getElementById("createSessionBtn").addEventListener("click", createSession);
+      document.getElementById("connectWsBtn").addEventListener("click", connectWebSocket);
+      document.getElementById("sendThinkingBtn").addEventListener("click", sendTestThinkingEvent);
+      startMicBtn.addEventListener("click", startMicrophone);
+      stopMicBtn.addEventListener("click", stopAnswer);
+      interruptBtn.addEventListener("click", interruptAssistant);
+
+      sessionIdInput.value = createSessionId();
+      updateButtons();
+    </script>
+  </body>
+</html>

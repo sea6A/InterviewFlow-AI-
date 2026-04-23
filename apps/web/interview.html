@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI 面试房间</title>
+    <link rel="stylesheet" href="./assets/app.css" />
+  </head>
+  <body class="room-body">
+    <main class="room-shell">
+      <section class="room-stage">
+        <header class="room-topbar">
+          <div class="room-headline">
+            <a class="back-link" href="./index.html">返回准备台</a>
+            <p class="eyebrow">Live Interview Control Deck</p>
+            <h1>实时语音面试房间</h1>
+            <p class="topbar-text">当前问题、实时转写、AI 回复和评分反馈会同步聚合在一个控制舱里，减少你在演示或训练时的来回切换。</p>
+          </div>
+
+          <div class="state-chip-row">
+            <span class="state-chip" id="roomWsBadge">WS 未连接</span>
+            <span class="state-chip" id="roomPhaseBadge">idle</span>
+            <span class="state-chip" id="roomMicBadge">麦克风待命</span>
+            <span class="state-chip" id="roomInterruptBadge">interrupt: idle</span>
+          </div>
+        </header>
+
+        <section class="room-context-strip">
+          <article class="context-tile context-tile-strong">
+            <span class="context-label">Target Role</span>
+            <strong id="roomJobTitle">等待载入岗位信息</strong>
+            <p id="roomSessionSummary">进入房间后，这里会显示本次训练的岗位和材料摘要。</p>
+          </article>
+
+          <article class="context-tile">
+            <span class="context-label">Focus Areas</span>
+            <div id="roomFocusTags" class="tag-list">
+              <span class="tag muted">等待训练焦点</span>
+            </div>
+          </article>
+
+          <article class="context-tile">
+            <span class="context-label">Session ID</span>
+            <strong id="roomSessionId">未创建</strong>
+            <p class="context-note">用于对应当前 WebSocket 会话与回放日志。</p>
+          </article>
+        </section>
+
+        <section class="hero-question-card">
+          <div class="question-header">
+            <div>
+              <p class="section-kicker">Current Question</p>
+              <h2>当前问题</h2>
+            </div>
+            <span class="mini-badge">Realtime Interviewer</span>
+          </div>
+          <div id="questionText" class="question-text">连接房间后，AI 会在这里发出第一道问题。</div>
+        </section>
+
+        <section class="dialog-grid">
+          <article class="dialog-card">
+            <div class="dialog-head">
+              <div>
+                <p class="section-kicker">Candidate</p>
+                <h3>你的回答转写</h3>
+              </div>
+              <span class="dialog-badge">Live Transcript</span>
+            </div>
+            <div id="candidateTranscript" class="dialog-body">开始作答后，这里会同步展示你的实时转写内容。</div>
+          </article>
+
+          <article class="dialog-card">
+            <div class="dialog-head">
+              <div>
+                <p class="section-kicker">Interviewer</p>
+                <h3>AI 回复文本</h3>
+              </div>
+              <span class="dialog-badge">Assistant Output</span>
+            </div>
+            <div id="assistantTranscript" class="dialog-body">AI 的文字回复会在这里同步显示。</div>
+          </article>
+        </section>
+
+        <section class="workspace-card">
+          <div class="section-header">
+            <div>
+              <p class="section-kicker">Controls</p>
+              <h3>语音控制与多模态输入</h3>
+            </div>
+            <span class="mini-badge">WebSocket + Realtime</span>
+          </div>
+
+          <div class="controls-grid">
+            <div class="upload-panel">
+              <p class="panel-title">补充图片上下文</p>
+              <p class="helper-text">可以上传简历截图、项目图或其他辅助图片，让 AI 在当前会话中一起参考。</p>
+              <div class="upload-row">
+                <input id="imageInput" type="file" accept="image/*" />
+                <button id="sendImageBtn" class="ghost" type="button">发送图片上下文</button>
+              </div>
+              <div id="imageHint" class="inline-note">尚未上传图片上下文。</div>
+            </div>
+
+            <div class="action-panel">
+              <p class="panel-title">房间操作</p>
+              <div class="action-row">
+                <button id="connectBtn" class="primary" type="button">连接房间</button>
+                <button id="startMicBtn" class="ghost" type="button" disabled>开始回答</button>
+                <button id="stopMicBtn" class="secondary" type="button" disabled>结束回答</button>
+                <button id="interruptBtn" class="secondary" type="button" disabled>打断 AI</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="roomStatus" class="status-banner">
+            当前还未连接面试房间。连接后，你可以开始实时语音回答，并体验 possible_interrupt 与 semantic_vad 的两级打断机制。
+          </div>
+        </section>
+      </section>
+
+      <aside class="insight-rail">
+        <section class="insight-card session-brief-card">
+          <div class="section-header compact">
+            <div>
+              <p class="eyebrow">Session Brief</p>
+              <h2>本次训练摘要</h2>
+            </div>
+          </div>
+
+          <div class="info-block">
+            <p class="panel-label">简历摘要</p>
+            <div id="roomResumeSummary" class="panel-body small">进入房间后，这里会读取首页中保存的简历摘要。</div>
+          </div>
+
+          <div class="info-block">
+            <p class="panel-label">目标关键词</p>
+            <div id="roomKeywordTags" class="tag-list">
+              <span class="tag muted">等待岗位关键词</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="insight-card">
+          <div class="section-header compact">
+            <div>
+              <p class="eyebrow">Scoreboard</p>
+              <h2>本轮评分</h2>
+            </div>
+          </div>
+
+          <div class="score-grid">
+            <div class="score-tile">
+              <span>完整度</span>
+              <strong id="scoreCompleteness">-</strong>
+            </div>
+            <div class="score-tile">
+              <span>STAR</span>
+              <strong id="scoreStar">-</strong>
+            </div>
+            <div class="score-tile">
+              <span>岗位匹配</span>
+              <strong id="scoreJobMatch">-</strong>
+            </div>
+            <div class="score-tile">
+              <span>表达清晰度</span>
+              <strong id="scoreClarity">-</strong>
+            </div>
+            <div class="score-tile">
+              <span>语音表现</span>
+              <strong id="scoreSpeech">-</strong>
+            </div>
+          </div>
+
+          <div class="info-block">
+            <p class="panel-label">改进建议</p>
+            <ul id="scoreTips" class="tips-list">
+              <li>完成一轮回答后，这里会显示更具体的提升建议。</li>
+            </ul>
+          </div>
+
+          <div class="info-block">
+            <p class="panel-label">STAR 缺失项</p>
+            <div id="starMissingTags" class="tag-list">
+              <span class="tag muted">等待本轮回答结束后分析</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="insight-card">
+          <div class="section-header compact">
+            <div>
+              <p class="eyebrow">Training Loop</p>
+              <h2>本轮复盘</h2>
+            </div>
+          </div>
+
+          <div class="info-block">
+            <p class="panel-label">总结</p>
+            <div id="turnFeedbackSummary" class="panel-body small">等待本轮回答结束后生成复盘反馈。</div>
+          </div>
+
+          <div class="info-block">
+            <p class="panel-label">做得好的点</p>
+            <ul id="turnFeedbackStrengths" class="tips-list">
+              <li>回答完成后，这里会列出本轮表现亮点。</li>
+            </ul>
+          </div>
+
+          <div class="info-block">
+            <p class="panel-label">薄弱点总结</p>
+            <ul id="turnFeedbackWeakPoints" class="tips-list">
+              <li>回答完成后，这里会列出需要加强的地方。</li>
+            </ul>
+          </div>
+
+          <div class="info-block">
+            <p class="panel-label">下一轮专项训练建议</p>
+            <ul id="turnTrainingPlan" class="tips-list">
+              <li>系统会根据本轮表现生成下一步训练建议。</li>
+            </ul>
+          </div>
+
+          <div class="info-block">
+            <p class="panel-label">改进版回答示例</p>
+            <div id="improvedAnswerExample" class="answer-box">
+              回答完成后，这里会生成一个更贴近真实面试场景的参考说法。
+            </div>
+          </div>
+        </section>
+
+        <section class="insight-card">
+          <div class="section-header compact">
+            <div>
+              <p class="eyebrow">Event Stream</p>
+              <h2>实时事件</h2>
+            </div>
+          </div>
+          <div id="log" class="log-box"></div>
+        </section>
+      </aside>
+    </main>
+
+    <script src="./assets/interview-room.js"></script>
+  </body>
+</html>

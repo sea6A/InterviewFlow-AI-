@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI 面试陪练官</title>
+    <link rel="stylesheet" href="./assets/app.css" />
+  </head>
+  <body class="landing-body">
+    <main class="landing-page">
+      <header class="landing-nav">
+        <div class="brand-block">
+          <div class="brand-mark" aria-hidden="true"></div>
+          <div class="brand-copy">
+            <p class="brand-caption">Realtime Interview Lab</p>
+            <strong>面试陪练官</strong>
+          </div>
+        </div>
+
+        <div class="nav-meta">
+          <span class="nav-pill">Resume to Realtime</span>
+          <p class="nav-note">把材料准备、问题追问和训练复盘放进一条完整链路。</p>
+        </div>
+      </header>
+
+      <section class="landing-hero">
+        <div class="landing-copy">
+          <div class="landing-copy-intro">
+            <p class="eyebrow">Editorial Training Deck</p>
+            <h1>把输入准备做成一场战前简报，把模拟面试做成一次真正演练</h1>
+            <p class="hero-text">
+              上传简历、拆解 JD、进入实时语音房间，再把每轮回答沉淀成评分与训练建议。这个首页不只是入口，而是你整场面试训练的起飞台。
+            </p>
+
+            <div class="hero-tag-row">
+              <span class="hero-tag">简历解析</span>
+              <span class="hero-tag">JD 分析</span>
+              <span class="hero-tag">实时追问</span>
+              <span class="hero-tag">评分复盘</span>
+            </div>
+          </div>
+
+          <div class="hero-feature-grid">
+            <article class="hero-feature-card hero-feature-card-accent">
+              <p class="feature-label">Training Signal</p>
+              <h3>先把输入质量拉高，再让 AI 追问更像真实面试官</h3>
+              <p>
+                系统会把简历亮点、岗位关键词和训练重点折叠成结构化上下文，面试过程里的问题、追问和评分都基于这份 briefing。
+              </p>
+            </article>
+
+            <article class="hero-feature-card">
+              <p class="feature-label">Realtime Rhythm</p>
+              <h3>边说边转写，边追问边复盘</h3>
+              <p>房间页会同时显示当前问题、候选人转写、AI 回复、得分拆解和下一轮训练建议。</p>
+            </article>
+          </div>
+
+          <div class="hero-metrics">
+            <article class="metric-card">
+              <strong>01</strong>
+              <span>上传简历并提炼项目亮点</span>
+            </article>
+            <article class="metric-card">
+              <strong>02</strong>
+              <span>解析岗位关键词与考察重点</span>
+            </article>
+            <article class="metric-card">
+              <strong>03</strong>
+              <span>进入实时房间完成一轮闭环训练</span>
+            </article>
+          </div>
+
+          <section class="hero-signal-board">
+            <div class="hero-signal-copy">
+              <p class="section-kicker">Why This Layout Works</p>
+              <h2>把首页改成“准备台”，让用户在进入房间前就感受到节奏和反馈密度</h2>
+            </div>
+
+            <div class="signal-list">
+              <article class="signal-item">
+                <span class="signal-index">A</span>
+                <div>
+                  <strong>输入质量</strong>
+                  <p>先确认简历与 JD 的结构化程度，后续追问才有针对性。</p>
+                </div>
+              </article>
+              <article class="signal-item">
+                <span class="signal-index">B</span>
+                <div>
+                  <strong>训练氛围</strong>
+                  <p>通过更有仪式感的布局和强对比信息层级，减少“表单感”。</p>
+                </div>
+              </article>
+              <article class="signal-item">
+                <span class="signal-index">C</span>
+                <div>
+                  <strong>行动引导</strong>
+                  <p>用户会更清楚地知道先解析什么、再进入哪里，以及进入后会看到什么。</p>
+                </div>
+              </article>
+            </div>
+          </section>
+        </div>
+
+        <aside class="launch-panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Launch Session</p>
+              <h2>创建一场新的模拟面试</h2>
+              <p class="panel-subtitle">把后台地址、简历内容和目标岗位整理成一份可直接进入 Realtime 房间的训练上下文。</p>
+            </div>
+            <span class="status-pill">Ready to Brief</span>
+          </div>
+
+          <div class="launch-overview">
+            <article class="overview-stat">
+              <span class="overview-label">Session Mode</span>
+              <strong class="overview-value">Voice + Follow-up</strong>
+              <p class="overview-meta">适合做 10 到 20 分钟的一轮模拟。</p>
+            </article>
+            <article class="overview-stat">
+              <span class="overview-label">Expected Output</span>
+              <strong class="overview-value">Score + Coaching</strong>
+              <p class="overview-meta">回答结束后即可看到评分与改进建议。</p>
+            </article>
+          </div>
+
+          <label for="apiBase">后端地址</label>
+          <input id="apiBase" value="http://127.0.0.1:3001" />
+
+          <section class="config-section">
+            <div class="section-header">
+              <div>
+                <p class="section-kicker">Step 1</p>
+                <h3>解析简历</h3>
+              </div>
+              <button id="analyzeResumeBtn" class="ghost" type="button">解析简历</button>
+            </div>
+
+            <div class="upload-card">
+              <input id="resumeFile" type="file" accept=".txt,.md,.json,.pdf,.docx" />
+              <p class="helper-text">支持 txt、md、json、pdf、docx。建议上传和目标岗位最匹配的最新版本。</p>
+            </div>
+
+            <label for="resumeSummary">简历摘要</label>
+            <textarea id="resumeSummary">
+1 年 Python 后端经验，熟悉 FastAPI、Redis、MySQL，做过接口开发、缓存优化和 AI 面试训练项目。</textarea
+            >
+
+            <div class="preview-card">
+              <div class="preview-head">
+                <span>解析结果预览</span>
+                <span class="mini-badge">Resume Context</span>
+              </div>
+              <div id="resumeAnalysisPreview" class="analysis-box">
+                上传并解析简历后，这里会展示摘要、优势、项目亮点和文本提取结果。
+              </div>
+            </div>
+          </section>
+
+          <section class="config-section">
+            <div class="section-header">
+              <div>
+                <p class="section-kicker">Step 2</p>
+                <h3>解析岗位 JD</h3>
+              </div>
+              <button id="analyzeJobBtn" class="ghost" type="button">解析 JD</button>
+            </div>
+
+            <label for="jobDescription">岗位描述</label>
+            <textarea id="jobDescription">
+后端开发工程师
+
+负责核心业务接口开发、性能优化和服务稳定性建设；
+要求熟悉 Python、FastAPI、Redis、MySQL，有良好的系统设计和问题排查能力；
+希望候选人能清楚描述项目背景、个人贡献、技术取舍和量化结果。</textarea
+            >
+
+            <div class="two-column-fields">
+              <div>
+                <label for="jobTitle">岗位标题</label>
+                <input id="jobTitle" value="后端开发工程师" />
+              </div>
+              <div>
+                <label for="keywords">岗位关键词</label>
+                <input id="keywords" value="FastAPI, Redis, MySQL, 微服务, 性能优化" />
+              </div>
+            </div>
+
+            <label for="focusAreas">重点考察方向</label>
+            <input id="focusAreas" value="项目经验, 技术取舍, 个人贡献, 结果量化" />
+
+            <div class="preview-card">
+              <div class="preview-head">
+                <span>岗位分析预览</span>
+                <span class="mini-badge">Job Profile</span>
+              </div>
+              <div id="jobAnalysisPreview" class="analysis-box">
+                解析 JD 后，这里会展示岗位标题、关键词、关注方向和规范化后的文本摘要。
+              </div>
+            </div>
+          </section>
+
+          <button id="enterRoomBtn" class="primary wide cta-button" type="button">进入面试房间</button>
+
+          <div class="landing-message-card">
+            <p class="panel-label">当前提示</p>
+            <p id="landingMessage" class="subtle-text">
+              建议先完成“解析简历”和“解析 JD”，这样进入房间后，追问和评分会更贴近真实面试场景。
+            </p>
+          </div>
+        </aside>
+      </section>
+
+      <section class="landing-footer-tape">
+        <p class="footer-kicker">Session Architecture</p>
+        <div class="footer-flow">
+          <span>Resume parsing</span>
+          <span>JD normalization</span>
+          <span>Realtime question loop</span>
+          <span>Per-turn coaching</span>
+        </div>
+      </section>
+    </main>
+
+    <script src="./assets/landing.js"></script>
+  </body>
+</html>
